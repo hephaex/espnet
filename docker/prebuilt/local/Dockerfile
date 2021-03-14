@@ -1,5 +1,5 @@
 ARG FROM_TAG
-FROM espnet/espnet:${FROM_TAG}
+FROM hephaex/espnet:${FROM_TAG}
 LABEL maintainer "Nelson Yalta <nyalta21@gmail.com>"
 
 ARG CUDA_VER
@@ -25,7 +25,7 @@ WORKDIR /espnet/tools
 # Replace nvidia-smi for nvcc because docker does not load nvidia-smi
 RUN if [ -z "$( which nvcc )" ]; then \
         echo "Build without CUDA" && \
-        MY_OPTS='CUPY_VERSION=""  TH_VERSION=1.6.0'; \
+        MY_OPTS='CUPY_VERSION=""  TH_VERSION=1.7.1'; \
     else \
         echo "Build with CUDA" && \
         # Disable cupy test
@@ -36,9 +36,9 @@ RUN if [ -z "$( which nvcc )" ]; then \
         MY_OPTS="CUDA_VERSION=${CUDA_VER}" && \
         . ./setup_cuda_env.sh /usr/local/cuda;  \
     fi; \ 
-    if [ "${CUDA_VER}" = "10.1" ]; then \
+    if [ "${CUDA_VER}" = "11.0" ]; then \
         # warpctc is not supported from Pytorch 1.3.1
-        MY_OPTS="${MY_OPTS} TH_VERSION=1.6.0";  \
+        MY_OPTS="${MY_OPTS} TH_VERSION=1.7.1";  \
     fi; \
     echo "Make with options ${MY_OPTS}" && \
     ln -s /kaldi ./ && \

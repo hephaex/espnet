@@ -8,9 +8,12 @@ SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
 tags="cpu-u18
       gpu-cuda10.0-cudnn7-u18
-      gpu-cuda10.1-cudnn7-u18"
+      gpu-cuda10.1-cudnn7-u18
+      gpu-cuda11.1-cudnn8-u18"
+
 cuda_vers="10.0
-           10.1"
+           10.1
+	   11.1"
 docker_ver=$(docker version -f '{{.Server.Version}}')
 echo "Using Docker Ver.${docker_ver}"
 
@@ -26,7 +29,7 @@ cmd_usage() {
     USAGE
         ${PROGRAM} <mode>
         ${PROGRAM} build_and_push
-        ${PROGRAM} local [cpu|9.1|9.2|10.0|10.1]
+        ${PROGRAM} local [cpu|9.1|9.2|10.0|10.1|11.1]
 
             mode      Select script functionality
 
@@ -36,7 +39,7 @@ cmd_usage() {
             push            push to docker hub
             build_and_push  automated build, test and push
             local           build a docker container from the local ESPnet repository
-                            using the base image from Docker Hub (espnet/espnet:runtime)
+                            using the base image from Docker Hub (espnet/spnet:runtime)
                             optional: cpu or CUDA version (default: cpu)
             fully_local     like local, but also builds the base image
 
@@ -53,14 +56,14 @@ cmd_usage() {
 build(){
     echo "Build docker containers"
     # build runtime and gpu based containers
-    docker_image=$( docker images -q espnet/espnet:runtime )
+    docker_image=$( docker images -q hephaex/espnet:runtime )
     if ! [[ -n ${docker_image} ]]; then
-        docker build --build-arg DOCKER_VER=${docker_ver} -f prebuilt/runtime/Dockerfile -t espnet/espnet:runtime . || exit 1
+        docker build --build-arg DOCKER_VER=${docker_ver} -f prebuilt/runtime/Dockerfile -t hephaex/espnet:runtime . || exit 1
     fi
     for ver in ${cuda_vers}; do
-        docker_image=$( docker images -q espnet/espnet:cuda${ver}-cudnn7 )
+        docker_image=$( docker images -q espnet/espnet:cuda${ver}-cudnn8 )
         if ! [[ -n ${docker_image} ]]; then
-            docker build -f prebuilt/devel/gpu/${ver}/cudnn7/Dockerfile -t espnet/espnet:cuda${ver}-cudnn7 . || exit 1
+            docker build -f prebuilt/devel/gpu/${ver}/cudnn8/Dockerfile -t hephaex/espnet:cuda${ver}-cudnn8 . || exit 1
         fi
     done
 
@@ -68,16 +71,16 @@ build(){
     docker_image=$( docker images -q espnet/espnet:cpu-u18 )
     if ! [[ -n ${docker_image} ]]; then
         echo "Now building cpu-u18"
-        docker build --build-arg FROM_TAG=runtime -f prebuilt/devel/Dockerfile -t espnet/espnet:cpu-u18 . || exit 1
+        docker build --build-arg FROM_TAG=runtime -f prebuilt/devel/Dockerfile -t hephaex/espnet:cpu-u18 . || exit 1
     fi
     # build gpu based
     for ver in ${cuda_vers}; do
-        build_args="--build-arg FROM_TAG=cuda${ver}-cudnn7"
+        build_args="--build-arg FROM_TAG=cuda${ver}-cudnn8"
         build_args="${build_args} --build-arg CUDA_VER=${ver}"
-        docker_image=$( docker images -q espnet/espnet:gpu-cuda${ver}-cudnn7-u18 )
+        docker_image=$( docker images -q hephaex/espnet:gpu-cuda${ver}-cudnn8-u18 )
         if ! [[ -n ${docker_image} ]]; then
-            echo "Now building gpu-cuda${ver}-cudnn7-u18"
-            docker build ${build_args} -f prebuilt/devel/Dockerfile -t espnet/espnet:gpu-cuda${ver}-cudnn7-u18 . || exit 1
+            echo "Now building gpu-cuda${ver}-cudnn8-u18"
+            docker build ${build_args} -f prebuilt/devel/Dockerfile -t hephaex/espnet:gpu-cuda${ver}-cudnn8-u18 . || exit 1
         fi
     done
 }
@@ -98,27 +101,27 @@ build_local(){
 
     if [ "${build_base_image}" = true ] ; then
         echo "building ESPnet base image"
-        docker build --build-arg DOCKER_VER=${docker_ver} -f prebuilt/runtime/Dockerfile -t espnet/espnet:runtime . || exit 1
+        docker build --build-arg DOCKER_VER=${docker_ver} -f prebuilt/runtime/Dockerfile -t hephaex/espnet:runtime . || exit 1
         sleep 1
     fi
 
     if [[ ${ver} == "cpu" ]]; then
         echo "building ESPnet CPU Image"
         docker build --build-arg FROM_TAG=runtime  --build-arg ESPNET_ARCHIVE=${ESPNET_ARCHIVE} \
-                     -f prebuilt/local/Dockerfile -t espnet/espnet:cpu-local . || exit 1
-    elif [[ ${ver} =~ ^(9.1|9.2|10.0|10.1)$ ]]; then
+                     -f prebuilt/local/Dockerfile -t hephaex/espnet:cpu-local . || exit 1
+    elif [[ ${ver} =~ ^(9.1|9.2|10.0|10.1|11.0|11.1)$ ]]; then
         echo "building ESPnet GPU Image for ${ver}"
         if [ "${build_base_image}" = true ] ; then
-            docker build -f prebuilt/devel/gpu/${ver}/cudnn7/Dockerfile -t espnet/espnet:cuda${ver}-cudnn7 . || exit 1
+            docker build -f prebuilt/devel/gpu/${ver}/cudnn8/Dockerfile -t hephaex/espnet:cuda${ver}-cudnn8 . || exit 1
         else
-            if ! [[ -n $( docker images -q espnet/espnet:cuda${ver}-cudnn7)  ]]; then
-                docker pull espnet/espnet:cuda${ver}-cudnn7
+            if ! [[ -n $( docker images -q hephaex/espnet:cuda${ver}-cudnn8)  ]]; then
+                docker pull hephaex/espnet:cuda${ver}-cudnn8
             fi
         fi
-        build_args="--build-arg FROM_TAG=cuda${ver}-cudnn7"
+        build_args="--build-arg FROM_TAG=cuda${ver}-cudnn8"
         build_args="${build_args} --build-arg CUDA_VER=${ver}"
         build_args="${build_args} --build-arg ESPNET_ARCHIVE=${ESPNET_ARCHIVE}"
-        docker build ${build_args} -f prebuilt/local/Dockerfile -t espnet/espnet:gpu-cuda${ver}-cudnn7-u18-local . || exit 1
+        docker build ${build_args} -f prebuilt/local/Dockerfile -t hephaex/espnet:gpu-cuda${ver}-cudnn8-u18-local . || exit 1
     else
         echo "Parameter invalid: " ${ver}
     fi

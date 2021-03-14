@@ -3,7 +3,7 @@
 docker_gpu=0
 docker_egs=
 docker_folders=
-docker_cuda=10.1
+docker_cuda=11.0
 
 docker_env=
 docker_cmd=
@@ -81,7 +81,7 @@ if [ ! "${docker_gpu}" == "-1" ]; then
         echo "CUDA was not found in your system. Use CPU image or install NVIDIA-DOCKER, CUDA and NVCC for GPU image."
         exit 1
     else
-        from_tag="gpu-cuda${docker_cuda}-cudnn7"
+        from_tag="gpu-cuda${docker_cuda}-cudnn8"
     fi
 fi
 
