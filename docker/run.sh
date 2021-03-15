@@ -4,7 +4,7 @@ docker_gpu=0
 docker_egs=
 docker_folders=
 docker_cuda=11.0
-
+HOME=work
 docker_env=
 docker_cmd=
 docker_os=u18
@@ -96,13 +96,13 @@ if [ ${is_local} = true ]; then
 fi
 
 # Check if image exists in the system and download if required
-docker_image=$( docker images -q espnet/espnet:${from_tag} )
+docker_image=$( docker images -q hephaex/espnet:${from_tag} )
 if ! [[ -n ${docker_image}  ]]; then
     if [ ${is_local} = true ]; then
         echo "!!! Warning: You need first to build the container using ./build.sh local <cuda_ver>."
         exit 1
     else
-        docker pull espnet/espnet:${from_tag}
+        docker pull hephaex/espnet:${from_tag}
     fi
 fi
 
@@ -115,7 +115,7 @@ fi
 if [ ${is_root} = false ]; then
     # Build a container with the user account
     container_tag="${from_tag}-user-${HOME##*/}"
-    docker_image=$( docker images -q espnet/espnet:${container_tag} ) 
+    docker_image=$( docker images -q hephaex/espnet:${container_tag} ) 
     if ! [[ -n ${docker_image}  ]]; then
         echo "Building docker image..."
         build_args="--build-arg FROM_TAG=${from_tag}"
@@ -123,14 +123,14 @@ if [ ${is_root} = false ]; then
         build_args="${build_args} --build-arg THIS_UID=${UID}"
         build_args="${build_args} --build-arg EXTRA_LIBS=${EXTRAS}"
 
-        echo "Now running docker build ${build_args} -f prebuilt/Dockerfile -t espnet/espnet:${container_tag} ."
-        (docker build ${build_args} -f prebuilt/Dockerfile -t  espnet/espnet:${container_tag} .) || exit 1
+        echo "Now running docker build ${build_args} -f prebuilt/Dockerfile -t hephaex/espnet:${container_tag} ."
+        (docker build ${build_args} -f prebuilt/Dockerfile -t  hephaex/espnet:${container_tag} .) || exit 1
     fi
 else
     container_tag=${from_tag}
 fi
 
-echo "Using image espnet/espnet:${container_tag}."
+echo "Using image hephaex/espnet:${container_tag}."
 
 this_time="$(date '+%Y%m%dT%H%M')"
 if [ "${docker_gpu}" == "-1" ]; then
@@ -200,7 +200,7 @@ if [ ! -z "${http_proxy}" ]; then
     this_env="${this_env} -e 'http_proxy=${http_proxy}'"
 fi
 
-cmd="${cmd0} -i --rm ${this_env} --name ${container_name} ${vols} espnet/espnet:${container_tag} /bin/bash -c '${cmd}'"
+cmd="${cmd0} -i --rm ${this_env} --name ${container_name} ${vols} hephaex/espnet:${container_tag} /bin/bash -c '${cmd}'"
 
 trap ctrl_c INT
 

@@ -6,14 +6,17 @@
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-tags="cpu-u18
-      gpu-cuda10.0-cudnn7-u18
-      gpu-cuda10.1-cudnn7-u18
-      gpu-cuda11.1-cudnn8-u18"
+#tags="cpu-u18
+#      gpu-cuda10.0-cudnn7-u18
+#      gpu-cuda10.1-cudnn7-u18
+#      gpu-cuda11.1-cudnn8-u18"
 
-cuda_vers="10.0
-           10.1
-	   11.1"
+#cuda_vers="10.0
+#           10.1
+#	   11.1"
+tags="gpu-cuda11.0-cudnn8-u18"
+
+cuda_vers="11.0"
 docker_ver=$(docker version -f '{{.Server.Version}}')
 echo "Using Docker Ver.${docker_ver}"
 
@@ -138,7 +141,7 @@ testing(){
     if [ -f ../egs/an4/asr1/dump/train_nodev/deltafalse/data.json ]; then 
         run_stage=3
     fi
-    for cuda_ver in cpu ${cuda_vers};do
+    for cuda_ver in ${cuda_vers};do
         for backend in pytorch chainer;do
             if [ "${cuda_ver}" != "cpu" ];then
                 docker_cuda="--docker-cuda ${cuda_ver}"
@@ -168,7 +171,7 @@ testing(){
     if [ -f ../egs2/an4/asr1/dump/raw/train_nodev/text ]; then 
         run_stage=9
     fi
-    for cuda_ver in cpu ${cuda_vers};do
+    for cuda_ver in ${cuda_vers};do
         if [ "${cuda_ver}" != "cpu" ];then
             docker_cuda="--docker-cuda ${cuda_ver}"
             gpu=0
