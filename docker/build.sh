@@ -6,14 +6,9 @@
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-tags="cpu-u18
-      gpu-cuda10.0-cudnn7-u18
-      gpu-cuda10.1-cudnn7-u18
-      gpu-cuda11.1-cudnn8-u18"
+tags="gpu-cuda11.0-cudnn8-u18"
 
-cuda_vers="10.0
-           10.1
-	   11.1"
+cuda_vers="11.0"
 docker_ver=$(docker version -f '{{.Server.Version}}')
 echo "Using Docker Ver.${docker_ver}"
 
@@ -29,7 +24,7 @@ cmd_usage() {
     USAGE
         ${PROGRAM} <mode>
         ${PROGRAM} build_and_push
-        ${PROGRAM} local [cpu|9.1|9.2|10.0|10.1|11.1]
+        ${PROGRAM} local [11.0]
 
             mode      Select script functionality
 
@@ -67,12 +62,6 @@ build(){
         fi
     done
 
-    # build cpu based
-    docker_image=$( docker images -q espnet/espnet:cpu-u18 )
-    if ! [[ -n ${docker_image} ]]; then
-        echo "Now building cpu-u18"
-        docker build --build-arg FROM_TAG=runtime -f prebuilt/devel/Dockerfile -t hephaex/espnet:cpu-u18 . || exit 1
-    fi
     # build gpu based
     for ver in ${cuda_vers}; do
         build_args="--build-arg FROM_TAG=cuda${ver}-cudnn8"
@@ -105,11 +94,7 @@ build_local(){
         sleep 1
     fi
 
-    if [[ ${ver} == "cpu" ]]; then
-        echo "building ESPnet CPU Image"
-        docker build --build-arg FROM_TAG=runtime  --build-arg ESPNET_ARCHIVE=${ESPNET_ARCHIVE} \
-                     -f prebuilt/local/Dockerfile -t hephaex/espnet:cpu-local . || exit 1
-    elif [[ ${ver} =~ ^(9.1|9.2|10.0|10.1|11.0|11.1)$ ]]; then
+    if [[ ${ver} =~ ^(11.0)$ ]]; then
         echo "building ESPnet GPU Image for ${ver}"
         if [ "${build_base_image}" = true ] ; then
             docker build -f prebuilt/devel/gpu/${ver}/cudnn8/Dockerfile -t hephaex/espnet:cuda${ver}-cudnn8 . || exit 1
@@ -138,8 +123,8 @@ testing(){
     if [ -f ../egs/an4/asr1/dump/train_nodev/deltafalse/data.json ]; then 
         run_stage=3
     fi
-    for cuda_ver in cpu ${cuda_vers};do
-        for backend in pytorch chainer;do
+    for cuda_ver in ${cuda_vers};do
+        for backend in pytorch ;do
             if [ "${cuda_ver}" != "cpu" ];then
                 docker_cuda="--docker-cuda ${cuda_ver}"
                 gpu=0
@@ -168,7 +153,7 @@ testing(){
     if [ -f ../egs2/an4/asr1/dump/raw/train_nodev/text ]; then 
         run_stage=9
     fi
-    for cuda_ver in cpu ${cuda_vers};do
+    for cuda_ver in ${cuda_vers};do
         if [ "${cuda_ver}" != "cpu" ];then
             docker_cuda="--docker-cuda ${cuda_ver}"
             gpu=0
