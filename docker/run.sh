@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+e#!/usr/bin/env bash
 
 docker_gpu=0
 docker_egs=
@@ -115,7 +115,7 @@ fi
 if [ ${is_root} = false ]; then
     # Build a container with the user account
     container_tag="${from_tag}-user-${HOME##*/}"
-    docker_image=$( docker images -q espnet/espnet:${container_tag} ) 
+    docker_image=$( docker images -q hephaex/espnet:${container_tag} ) 
     if ! [[ -n ${docker_image}  ]]; then
         echo "Building docker image..."
         build_args="--build-arg FROM_TAG=${from_tag}"
@@ -123,8 +123,8 @@ if [ ${is_root} = false ]; then
         build_args="${build_args} --build-arg THIS_UID=${UID}"
         build_args="${build_args} --build-arg EXTRA_LIBS=${EXTRAS}"
 
-        echo "Now running docker build ${build_args} -f prebuilt/Dockerfile -t espnet/espnet:${container_tag} ."
-        (docker build ${build_args} -f prebuilt/Dockerfile -t  espnet/espnet:${container_tag} .) || exit 1
+        echo "Now running docker build ${build_args} -f prebuilt/Dockerfile -t hephaex/espnet:${container_tag} ."
+        (docker build ${build_args} -f prebuilt/Dockerfile -t  hephaex/espnet:${container_tag} .) || exit 1
     fi
 else
     container_tag=${from_tag}
